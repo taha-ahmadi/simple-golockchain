@@ -7,8 +7,8 @@ import (
 )
 
 type Block struct {
-	Timestamp time.Time
-	Data      []byte `json:"data"`
+	Timestamp time.Time `json:"timestamp"`
+	Data      []byte    `json:"data"`
 
 	Nonce    int32  `json:"nonce"`
 	PrevHash []byte `json:"prev_hash"`

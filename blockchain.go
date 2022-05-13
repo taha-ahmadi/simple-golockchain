@@ -1,70 +1,75 @@
 package main
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
 )
 
 type BlockChain struct {
 	Difficulty int
 	Mask       []byte
-	Block      []*Block
+
+	store Store
 }
 
 // Add a block to the BlockChain
-func (bc *BlockChain) Add(data []byte) error {
-	lenBlockchain := len(bc.Block)
-
-	if lenBlockchain == 0 {
-		return fmt.Errorf("you should have a block chain first")
+func (bc *BlockChain) Add(data []byte) (*Block, error) {
+	lastBlockHash, err := bc.store.LastHash()
+	if err != nil {
+		return nil, fmt.Errorf("failed getting last block hash %w", err)
+	}
+	block, err := bc.store.Append(NewBlock(data, bc.Mask, lastBlockHash))
+	if err != nil {
+		return nil, fmt.Errorf("failed to append block: %w", err)
 	}
 
-	bc.Block = append(bc.Block, NewBlock(data, bc.Mask, bc.Block[lenBlockchain-1].Hash))
-
-	return nil
+	return block, nil
 }
 
-func (bc *BlockChain) String() string {
-	var str string
-	for _, v := range bc.Block {
-		str += v.String()
-	}
+func (bc *BlockChain) Print() {
+	fmt.Printf("Difficulty: %d\n store: %T\n", bc.Difficulty, bc.store)
 
-	return str
+	_ = Iterate(bc.store, func(b *Block) error {
+		fmt.Print(b)
+		return nil
+	})
 }
 
 // NewBlockChain returns a new BlockChain
-func NewBlockChain(difficulty int) *BlockChain {
+func NewBlockChain(difficulty int, store Store) (*BlockChain, error) {
 	mask := GenerateMask(difficulty)
 	blockChain := BlockChain{
 		Difficulty: difficulty,
 		Mask:       mask,
-	}
-	blockChain.Block = []*Block{
-		NewBlock([]byte("Genesis Block"), blockChain.Mask,
-			GenerateHash([]byte("Genesis Block"))),
+		store:      store,
 	}
 
-	return &blockChain
+	_, err := store.LastHash()
+	if err == nil {
+		return &blockChain, nil
+	}
+
+	if !errors.Is(err, ErrNoInitialized) {
+		return nil, fmt.Errorf("getting the last hash failed: %w", err)
+	}
+
+	genesisBlock := NewBlock(
+		[]byte("Genesis Block"),
+		blockChain.Mask,
+		[]byte{},
+	)
+	if _, err := store.Append(genesisBlock); err != nil {
+		return nil, err
+	}
+	return &blockChain, nil
 }
 
 // Validate checks the PrevHash and hash of the blocks
 func (bc *BlockChain) Validate() error {
-
-	for i := range bc.Block {
-
-		if err := bc.Block[i].Validate(bc.Mask); err != nil {
-			return fmt.Errorf("blockchain is not valid: %v", err)
+	return Iterate(bc.store, func(b *Block) error {
+		if err := b.Validate(bc.Mask); err != nil {
+			return fmt.Errorf("block is invalid: %w", err)
 		}
-
-		if i == 0 {
-			continue
-		}
-
-		if !bytes.Equal(bc.Block[i].PrevHash, bc.Block[i-1].Hash) {
-			return fmt.Errorf("the order is invalid, it should be %x but it is %x", bc.Block[i-1].Hash, bc.Block[i].PrevHash)
-		}
-	}
-
-	return nil
+		return nil
+	})
 }
