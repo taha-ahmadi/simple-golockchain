@@ -1,4 +1,4 @@
-package main
+package golockchain
 
 import (
 	"crypto/sha256"
