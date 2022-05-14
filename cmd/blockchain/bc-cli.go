@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	blockchain, err := sg.NewBlockChain(4, sg.NewMapStore())
+	blockchain, err := sg.NewBlockChain(4, sg.NewFolderStore("./config"))
 	if err != nil {
 		log.Fatal(err)
 	}
