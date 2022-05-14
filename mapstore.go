@@ -36,4 +36,15 @@ func (ms *mapStore) Append(block *Block) (*Block, error) {
 }
 
 func (ms *mapStore) LastHash() ([]byte, error) {
+	if len(ms.last) == 0 {
+		return nil, ErrNoInitialized
+	}
+
+	return ms.last, nil
+}
+// NewMapStore is used to create an in memory and not persistant storage, useful for tests
+func NewMapStore() Store {
+	return &mapStore{
+		data: make(map[string]*Block),
+	}
 }
