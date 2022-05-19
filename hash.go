@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// GenerateMask creates a mask based on the number of zeros required in the hash
 func GenerateMask(zeros int) []byte{
 	full, half := zeros/2, zeros%2
 	var mask []byte

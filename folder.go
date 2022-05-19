@@ -88,6 +88,9 @@ func writeJSON(path string, v interface{}) error {
 	return nil
 }
 
+// NewFolderStore is persistent storage that stores blocks in the
+// JSON file, each block is in the one file and there is a config file
+// that keeps the last hash of the blockchain
 func NewFolderStore(root string) Store {
 	fs := &folderStore{
 		root:       root,

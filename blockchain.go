@@ -26,6 +26,7 @@ func (bc *BlockChain) Add(data []byte) (*Block, error) {
 	return block, nil
 }
 
+// Print the current Blockchain to Stdout, it is good for testing purposes
 func (bc *BlockChain) Print() {
 	fmt.Printf("Difficulty: %d\n store: %T\n", bc.Difficulty, bc.store)
 

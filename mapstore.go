@@ -42,7 +42,9 @@ func (ms *mapStore) LastHash() ([]byte, error) {
 
 	return ms.last, nil
 }
-// NewMapStore is used to create an in memory and not persistant storage, useful for tests
+
+// NewMapStore is a in memory storage for blockchain it's fast and
+// it is good for testing purposes
 func NewMapStore() Store {
 	return &mapStore{
 		data: make(map[string]*Block),

@@ -15,7 +15,8 @@ type Block struct {
 	Hash     []byte `json:"hash"`
 }
 
-// NewBlock returns a new Block
+// NewBlock returns a new Block with mask that is for
+// difficulty level of Block
 func NewBlock(data []byte, mask, prefHash []byte) *Block {
 	b := Block{
 		Timestamp: time.Now(),
@@ -27,7 +28,8 @@ func NewBlock(data []byte, mask, prefHash []byte) *Block {
 	return &b
 }
 
-// Validate checks if the block is valid
+// Validate try to validate the current block with mask for validating
+// the hash difficulty
 func (b *Block) Validate(mask []byte) error {
 	hash := GenerateHash(b.Timestamp.UnixNano(), b.Data, b.PrevHash, b.Nonce)
 
