@@ -46,7 +46,7 @@ func (b *Block) Validate(mask []byte) error {
 
 func (b *Block) String() string {
 	return fmt.Sprintf(
-		"Time: %s\nData: %s\nHash: %x\nPervHash: %x\nNonce:%x\n",
+		"Time: %s\nData: %s\nHash: %x\nPervHash: %x\nNonce:%d\n",
 		b.Timestamp, b.Data, b.Hash, b.PrevHash, b.Nonce,
 	)
 }

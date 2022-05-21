@@ -95,10 +95,10 @@ func NewFolderStore(root string) Store {
 	fs := &folderStore{
 		root:       root,
 		config:     &folderConfig{},
-		configPath: filepath.Join(root, "config.json"),
+		configPath: filepath.Join(root+"/config", "config.json"),
 	}
 
-	if err := readJSON(root, fs.config); err != nil {
+	if err := readJSON(fs.configPath, fs.config); err != nil {
 		log.Print("failed to read config")
 		fs.config.LastHash = nil
 	}
