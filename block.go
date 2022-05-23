@@ -7,8 +7,8 @@ import (
 )
 
 type Block struct {
-	Timestamp time.Time `json:"timestamp"`
-	Data      []byte    `json:"data"`
+	Timestamp    time.Time `json:"timestamp"`
+	Transactions []*Transaction
 
 	Nonce    int32  `json:"nonce"`
 	PrevHash []byte `json:"prev_hash"`
@@ -17,13 +17,13 @@ type Block struct {
 
 // NewBlock returns a new Block with mask that is for
 // difficulty level of Block
-func NewBlock(data []byte, mask, prefHash []byte) *Block {
+func NewBlock(txs []*Transaction, mask, prefHash []byte) *Block {
 	b := Block{
-		Timestamp: time.Now(),
-		Data:      data,
-		PrevHash:  prefHash,
+		Timestamp:    time.Now(),
+		Transactions: txs,
+		PrevHash:     prefHash,
 	}
-	b.Hash, b.Nonce = DifficultHash(mask, b.Timestamp.UnixNano(), b.Data, b.PrevHash)
+	b.Hash, b.Nonce = DifficultHash(mask, b.Timestamp.UnixNano(), calculateTxHash(b.Transactions...), b.PrevHash)
 
 	return &b
 }
@@ -31,7 +31,7 @@ func NewBlock(data []byte, mask, prefHash []byte) *Block {
 // Validate try to validate the current block with mask for validating
 // the hash difficulty
 func (b *Block) Validate(mask []byte) error {
-	hash := GenerateHash(b.Timestamp.UnixNano(), b.Data, b.PrevHash, b.Nonce)
+	hash := GenerateHash(b.Timestamp.UnixNano(), calculateTxHash(b.Transactions...), b.PrevHash, b.Nonce)
 
 	if !bytes.Equal(hash, b.Hash) {
 		return fmt.Errorf("the hash is invalid it should %x but it is %x", hash, b.Hash)
@@ -46,7 +46,7 @@ func (b *Block) Validate(mask []byte) error {
 
 func (b *Block) String() string {
 	return fmt.Sprintf(
-		"Time: %s\nData: %s\nHash: %x\nPervHash: %x\nNonce:%x\n",
-		b.Timestamp, b.Data, b.Hash, b.PrevHash, b.Nonce,
+		"Time: %s\nData: %d\nHash: %x\nPervHash: %x\nNonce:%d\n",
+		b.Timestamp, len(b.Transactions), b.Hash, b.PrevHash, b.Nonce,
 	)
 }

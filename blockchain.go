@@ -13,7 +13,7 @@ type BlockChain struct {
 }
 
 // Add a block to the BlockChain
-func (bc *BlockChain) Add(data []byte) (*Block, error) {
+func (bc *BlockChain) Add(data []*Transaction) (*Block, error) {
 	lastBlockHash, err := bc.store.LastHash()
 	if err != nil {
 		return nil, fmt.Errorf("failed getting last block hash %w", err)
@@ -30,7 +30,12 @@ func (bc *BlockChain) Add(data []byte) (*Block, error) {
 func (bc *BlockChain) Print() {
 	fmt.Printf("Difficulty: %d\n store: %T\n", bc.Difficulty, bc.store)
 
-	_ = Iterate(bc.store, func(b *Block) error {
+	errEnough := fmt.Errorf("enough")
+
+	err := Iterate(bc.store, func(b *Block) error {
+		if count > 0 {
+			count--
+		}
 		fmt.Print(b)
 		return nil
 	})
@@ -53,9 +58,9 @@ func NewBlockChain(difficulty int, store Store) (*BlockChain, error) {
 	if !errors.Is(err, ErrNoInitialized) {
 		return nil, fmt.Errorf("getting the last hash failed: %w", err)
 	}
-
+	gbTx := NewCoinBaseTx(genesis, nil)
 	genesisBlock := NewBlock(
-		[]byte("Genesis Block"),
+		[]*Transaction{gbTx},
 		blockChain.Mask,
 		[]byte{},
 	)
