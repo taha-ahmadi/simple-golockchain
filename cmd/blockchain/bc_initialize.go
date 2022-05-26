@@ -11,7 +11,7 @@ func initialize(store golockchain.Store, args ...string) error {
 	var (
 		genesis string
 	)
-	fs.StringVar(&genesis, "genesis", "Genesis block", "Genesis data to use")
+	fs.StringVar(&genesis, "owner", "me", "Genesis block owner")
 
 	fs.Parse(args[1:])
 

@@ -1,6 +1,7 @@
 package golockchain
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 )
@@ -13,7 +14,7 @@ type BlockChain struct {
 }
 
 // Add a block to the BlockChain
-func (bc *BlockChain) Add(data []*Transaction) (*Block, error) {
+func (bc *BlockChain) Add(data ...*Transaction) (*Block, error) {
 	lastBlockHash, err := bc.store.LastHash()
 	if err != nil {
 		return nil, fmt.Errorf("failed getting last block hash %w", err)
@@ -51,6 +52,47 @@ func (bc *BlockChain) Print(header bool, count int) error {
 	}
 
 	return err
+}
+
+func (bc *BlockChain) UnspentTxn(address []byte) (map[string]*Transaction, map[string][]int, int, error) {
+	spent := make(map[string][]int)
+	txom := make(map[string][]int)
+	txns := make(map[string]*Transaction)
+	acc := 0
+	err := Iterate(bc.store, func(b *Block) error {
+		for _, txn := range b.Transactions {
+			txnID := hex.EncodeToString(txn.ID)
+
+			for i := range txn.VOut {
+				if txn.VOut[i].TryUnlock(address) && !inArray(i, spent[txnID]) {
+					txns[txnID] = txn
+					txom[txnID] = append(txom[txnID], i)
+					acc += txn.VOut[i].Value
+				}
+			}
+
+			delete(spent, txnID)
+
+			if txn.IsCoinBase() {
+				continue
+			}
+
+			for i := range txn.VIn {
+				if txn.VIn[i].MatchLock(address) {
+					outID := hex.EncodeToString(txn.VIn[i].TXID)
+					spent[outID] = append(spent[outID], txn.VIn[i].VOut)
+				}
+			}
+
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, nil, 0, fmt.Errorf("iterate error: %w", err)
+	}
+
+	return txns, txom, acc, nil
 }
 
 // NewBlockChain returns a new BlockChain
